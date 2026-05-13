@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>零股交易策略計算機</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; color: #1c1e21; }
+        .card { background: white; padding: 24px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); width: 100%; max-width: 420px; }
+        h2 { margin-top: 0; font-size: 1.25rem; text-align: center; color: #1a73e8; }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
+        input { width: 100%; padding: 12px; border: 2px solid #e4e6eb; border-radius: 8px; box-sizing: border-box; font-size: 18px; outline: none; transition: border 0.2s; }
+        input:focus { border-color: #1a73e8; }
+        
+        .recommendation { background: #e8f0fe; padding: 16px; border-radius: 12px; margin-top: 20px; }
+        .rec-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .rec-item:last-child { margin-bottom: 0; }
+        .label-text { font-size: 14px; color: #5f6368; }
+        .value-text { font-size: 18px; font-weight: bold; color: #1a73e8; }
+        .info-tag { font-size: 11px; color: #888; margin-top: 10px; line-height: 1.4; }
+        .divider { height: 1px; background: #dcdcdc; margin: 15px 0; }
+/* 讓輸入框在手機點擊時不會自動放大，且更適合手指點擊 */
+input {
+    font-size: 16px; /* 防止 iOS 自動放大 */
+    height: 48px;   /* 符合手指觸控大小 */
+}
+
+/* 讓卡片在手機螢幕上自動撐滿 */
+body {
+    margin: 0;
+    padding: 10px;
+    background: #ffffff;
+}
+
+.card {
+    max-width: 100%;
+    box-shadow: none; /* 手機版通常用全白底色較乾淨 */
+}    
+</style>
+</head>
+<body>
+
+<div class="card">
+    <h2>零股最優策略計算</h2>
+    
+    <div class="input-group">
+        <label>輸入目前股價 (TWD)</label>
+        <input type="number" id="price" step="0.01" placeholder="例如: 585" oninput="calculate()">
+    </div>
+
+    <div id="result-area" style="display:none;">
+        <div class="recommendation">
+            <div class="rec-item">
+                <span class="label-text">手續費 1 元 (極限股數)</span>
+                <span class="value-text" id="max-1-fee">0 股</span>
+            </div>
+            <div class="rec-item" style="font-size: 12px; color: #666;">
+                <span>成交金額：</span><span id="amount-1">0</span>
+            </div>
+            
+            <div class="divider"></div>
+
+            <div class="rec-item">
+                <span class="label-text">手續費 2 元 (起始股數)</span>
+                <span class="value-text" id="min-2-fee" style="color: #d93025;">0 股</span>
+            </div>
+            <div class="rec-item" style="font-size: 12px; color: #666;">
+                <span>成交金額：</span><span id="amount-2">0</span>
+            </div>
+        </div>
+
+        <div class="info-tag">
+            💡 計算基準：<br>
+            費率 0.1425% × 0.28 折 (低消 1 元)<br>
+            金額超過 5,012 元時手續費將跳至 2 元。
+        </div>
+    </div>
+</div>
+
+<script>
+    function calculate() {
+        const price = parseFloat(document.getElementById('price').value);
+        const resultArea = document.getElementById('result-area');
+        
+        if (!price || price <= 0) {
+            resultArea.style.display = 'none';
+            return;
+        }
+        
+        resultArea.style.display = 'block';
+
+        // 核心邏輯：5012 元是 1 元手續費的最後臨界點
+        const maxAmountFor1 = 5012;
+        const minAmountFor2 = 5013;
+
+        // 計算股數
+        const sharesFor1 = Math.floor(maxAmountFor1 / price);
+        const sharesFor2 = Math.ceil(minAmountFor2 / price);
+
+        // 更新 UI
+        document.getElementById('max-1-fee').innerText = sharesFor1.toLocaleString() + " 股";
+        document.getElementById('amount-1').innerText = Math.round(sharesFor1 * price).toLocaleString() + " 元";
+        
+        document.getElementById('min-2-fee').innerText = sharesFor2.toLocaleString() + " 股";
+        document.getElementById('amount-2').innerText = Math.round(sharesFor2 * price).toLocaleString() + " 元";
+    }
+</script>
+
+</body>
+</html>
