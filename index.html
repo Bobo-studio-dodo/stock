@@ -3,77 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>零股交易策略計算機</title>
+    <title>零股交易策略與收益計算機</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; color: #1c1e21; }
-        .card { background: white; padding: 24px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); width: 100%; max-width: 420px; }
-        h2 { margin-top: 0; font-size: 1.25rem; text-align: center; color: #1a73e8; }
-        .input-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
-        input { width: 100%; padding: 12px; border: 2px solid #e4e6eb; border-radius: 8px; box-sizing: border-box; font-size: 18px; outline: none; transition: border 0.2s; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 16px; color: #1c1e21; margin: 0; }
+        .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); width: 100%; max-width: 420px; padding-bottom: 100px; }
+        h2 { margin-top: 0; font-size: 1.25rem; text-align: center; color: #1a73e8; margin-bottom: 20px; }
+        
+        /* 雙欄位並排設計，節省手機垂直空間 */
+        .input-row { display: flex; gap: 12px; margin-bottom: 20px; }
+        .input-group { flex: 1; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; color: #4a4a4a; }
+        input { width: 100%; padding: 10px; border: 2px solid #e4e6eb; border-radius: 8px; box-sizing: border-box; font-size: 16px; outline: none; transition: border 0.2s; }
         input:focus { border-color: #1a73e8; }
         
-        .recommendation { background: #e8f0fe; padding: 16px; border-radius: 12px; margin-top: 20px; }
-        .rec-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .rec-item:last-child { margin-bottom: 0; }
-        .label-text { font-size: 14px; color: #5f6368; }
+        .recommendation { background: #e8f0fe; padding: 14px; border-radius: 12px; margin-top: 16px; }
+        .rec-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .label-text { font-size: 15px; font-weight: 600; color: #202124; }
         .value-text { font-size: 18px; font-weight: bold; color: #1a73e8; }
-        .info-tag { font-size: 11px; color: #888; margin-top: 10px; line-height: 1.4; }
-        .divider { height: 1px; background: #dcdcdc; margin: 15px 0; }
-/* 讓輸入框在手機點擊時不會自動放大，且更適合手指點擊 */
-input {
-    font-size: 16px; /* 防止 iOS 自動放大 */
-    height: 48px;   /* 符合手指觸控大小 */
-}
+        
+        /* 詳情與收益排版 */
+        .sub-info { font-size: 12px; color: #5f6368; display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .sell-details { margin-top: 8px; padding: 10px; background: rgba(255, 255, 255, 0.75); border-radius: 8px; border-left: 3px solid #1a73e8; }
+        .profit-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; margin-top: 8px; padding-top: 6px; border-top: 1px dashed #ccc; }
+        
+        /* 損益顏色：台股習慣紅賺綠賠 */
+        .profit-up { color: #d93025; font-weight: bold; } 
+        .profit-down { color: #137333; font-weight: bold; }
+        .profit-none { color: #5f6368; }
 
-/* 讓卡片在手機螢幕上自動撐滿 */
-body {
-    margin: 0;
-    padding: 10px;
-    background: #ffffff;
-}
-
-.card {
-    max-width: 100%;
-    box-shadow: none; /* 手機版通常用全白底色較乾淨 */
-}    
-</style>
+        .info-tag { font-size: 11px; color: #70757a; margin-top: 15px; line-height: 1.5; border-top: 1px dashed #ccc; padding-top: 10px; }
+        .divider { height: 1px; background: #dcdcdc; margin: 16px 0; }
+    </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>零股最優策略計算</h2>
+    <h2>零股最優策略與損益計算</h2>
     
-    <div class="input-group">
-        <label>輸入目前股價 (TWD)</label>
-        <input type="number" id="price" step="0.01" placeholder="例如: 585" oninput="calculate()">
+    <div class="input-row">
+        <div class="input-group">
+            <label>買入股價 (TWD)</label>
+            <input type="number" id="price" step="0.01" inputmode="decimal" placeholder="例如: 94" oninput="calculate()">
+        </div>
+        <div class="input-group">
+            <label>預計賣出價 (TWD)</label>
+            <input type="number" id="sell_price" step="0.01" inputmode="decimal" placeholder="例如: 100" oninput="calculate()">
+        </div>
     </div>
 
     <div id="result-area" style="display:none;">
         <div class="recommendation">
             <div class="rec-item">
-                <span class="label-text">手續費 1 元 (極限股數)</span>
+                <span class="label-text">手續費 1 元 (最高極限)</span>
                 <span class="value-text" id="max-1-fee">0 股</span>
             </div>
-            <div class="rec-item" style="font-size: 12px; color: #666;">
-                <span>成交金額：</span><span id="amount-1">0</span>
-            </div>
+            <div class="sub-info"><span>買入價金：</span><span id="amount-1">0 元</span></div>
+            <div class="sub-info"><span>買入手續費：</span><span id="buy-fee-1">1 元</span></div>
             
-            <div class="divider"></div>
-
-            <div class="rec-item">
-                <span class="label-text">手續費 2 元 (起始股數)</span>
-                <span class="value-text" id="min-2-fee" style="color: #d93025;">0 股</span>
+            <div class="sell-details" id="sell-area-1" style="display:none;">
+                <div class="sub-info"><span>賣出手續費：</span><span id="sell-fee-1">0 元</span></div>
+                <div class="sub-info"><span>賣出證交稅(0.3%)：</span><span id="sell-tax-1">0 元</span></div>
+                <div class="profit-row">
+                    <span>預估淨損益：</span>
+                    <span id="profit-1" class="profit-none">0 元</span>
+                </div>
             </div>
-            <div class="rec-item" style="font-size: 12px; color: #666;">
-                <span>成交金額：</span><span id="amount-2">0</span>
+        </div>
+        
+        <div class="divider"></div>
+
+        <div class="recommendation" style="background: #f1f3f4;">
+            <div class="rec-item">
+                <span class="label-text" style="color: #202124;">手續費 2 元 (最高極限)</span>
+                <span class="value-text" id="max-2-fee" style="color: #202124;">0 股</span>
+            </div>
+            <div class="sub-info"><span>買入價金：</span><span id="amount-2">0 元</span></div>
+            <div class="sub-info"><span>買入手續費：</span><span id="buy-fee-2">2 元</span></div>
+            
+            <div class="sell-details" id="sell-area-2" style="display:none; border-left-color: #5f6368;">
+                <div class="sub-info"><span>賣出手續費：</span><span id="sell-fee-2">0 元</span></div>
+                <div class="sub-info"><span>賣出證交稅(0.3%)：</span><span id="sell-tax-2">0 元</span></div>
+                <div class="profit-row">
+                    <span>預估淨損益：</span>
+                    <span id="profit-2" class="profit-none">0 元</span>
+                </div>
             </div>
         </div>
 
         <div class="info-tag">
-            💡 計算基準：<br>
-            費率 0.1425% × 0.28 折 (低消 1 元)<br>
-            金額超過 5,012 元時手續費將跳至 2 元。
+            💡 <b>計算與扣稅邏輯：</b><br>
+            ・手續費費率 0.1425% × 0.28 折 (最低 1 元)<br>
+            ・證交稅稅率 0.3% (最低 1 元)<br>
+            ・所有費用皆依台股規則「小數點後無條件捨去」。
         </div>
     </div>
 </div>
@@ -81,7 +102,11 @@ body {
 <script>
     function calculate() {
         const price = parseFloat(document.getElementById('price').value);
+        const sellPrice = parseFloat(document.getElementById('sell_price').value);
         const resultArea = document.getElementById('result-area');
+        
+        const sellArea1 = document.getElementById('sell-area-1');
+        const sellArea2 = document.getElementById('sell-area-2');
         
         if (!price || price <= 0) {
             resultArea.style.display = 'none';
@@ -90,20 +115,83 @@ body {
         
         resultArea.style.display = 'block';
 
-        // 核心邏輯：5012 元是 1 元手續費的最後臨界點
+        // 1元與2元手續費的總額上限門檻
         const maxAmountFor1 = 5012;
-        const minAmountFor2 = 5013;
+        const maxAmountFor2 = 7518;
 
-        // 計算股數
+        // 計算對應的最高股數
         const sharesFor1 = Math.floor(maxAmountFor1 / price);
-        const sharesFor2 = Math.ceil(minAmountFor2 / price);
+        const sharesFor2 = Math.floor(maxAmountFor2 / price);
 
-        // 更新 UI
+        // --- 策略 1 買入計算 ---
+        const buyAmt1 = Math.round(sharesFor1 * price);
+        let buyFee1 = Math.floor(buyAmt1 * 0.001425 * 0.28);
+        if (buyFee1 < 1) buyFee1 = 1;
+        const totalBuyCost1 = buyAmt1 + buyFee1;
+
+        // --- 策略 2 買入計算 ---
+        const buyAmt2 = Math.round(sharesFor2 * price);
+        let buyFee2 = Math.floor(buyAmt2 * 0.001425 * 0.28);
+        if (buyFee2 < 1) buyFee2 = 1;
+        const totalBuyCost2 = buyAmt2 + buyFee2;
+
+        // 更新買入 UI
         document.getElementById('max-1-fee').innerText = sharesFor1.toLocaleString() + " 股";
-        document.getElementById('amount-1').innerText = Math.round(sharesFor1 * price).toLocaleString() + " 元";
+        document.getElementById('amount-1').innerText = buyAmt1.toLocaleString() + " 元";
+        document.getElementById('buy-fee-1').innerText = buyFee1 + " 元";
         
-        document.getElementById('min-2-fee').innerText = sharesFor2.toLocaleString() + " 股";
-        document.getElementById('amount-2').innerText = Math.round(sharesFor2 * price).toLocaleString() + " 元";
+        document.getElementById('max-2-fee').innerText = sharesFor2.toLocaleString() + " 股";
+        document.getElementById('amount-2').innerText = buyAmt2.toLocaleString() + " 元";
+        document.getElementById('buy-fee-2').innerText = buyFee2 + " 元";
+
+        // --- 處理賣出與收益邏輯 ---
+        if (sellPrice && sellPrice > 0) {
+            sellArea1.style.display = 'block';
+            sellArea2.style.display = 'block';
+
+            // 1. 策略一賣出計算
+            const sellAmt1 = Math.round(sharesFor1 * sellPrice);
+            let sellFee1 = Math.floor(sellAmt1 * 0.001425 * 0.28);
+            if (sellFee1 < 1) sellFee1 = 1;
+            let tax1 = Math.floor(sellAmt1 * 0.003);
+            if (tax1 < 1 && sellAmt1 > 0) tax1 = 1; // 證交稅最低1元
+            const netProfit1 = sellAmt1 - sellFee1 - tax1 - totalBuyCost1;
+
+            document.getElementById('sell-fee-1').innerText = sellFee1 + " 元";
+            document.getElementById('sell-tax-1').innerText = tax1 + " 元";
+            renderProfit('profit-1', netProfit1);
+
+            // 2. 策略二賣出計算
+            const sellAmt2 = Math.round(sharesFor2 * sellPrice);
+            let sellFee2 = Math.floor(sellAmt2 * 0.001425 * 0.28);
+            if (sellFee2 < 1) sellFee2 = 1;
+            let tax2 = Math.floor(sellAmt2 * 0.003);
+            if (tax2 < 1 && sellAmt2 > 0) tax2 = 1;
+            const netProfit2 = sellAmt2 - sellFee2 - tax2 - totalBuyCost2;
+
+            document.getElementById('sell-fee-2').innerText = sellFee2 + " 元";
+            document.getElementById('sell-tax-2').innerText = tax2 + " 元";
+            renderProfit('profit-2', netProfit2);
+        } else {
+            // 未輸入賣出價時隱藏細節
+            sellArea1.style.display = 'none';
+            sellArea2.style.display = 'none';
+        }
+    }
+
+    // 渲染損益文字與顏色的輔助函式
+    function renderProfit(elementId, value) {
+        const el = document.getElementById(elementId);
+        if (value > 0) {
+            el.innerText = "+" + value.toLocaleString() + " 元";
+            el.className = "profit-up";
+        } else if (value < 0) {
+            el.innerText = value.toLocaleString() + " 元";
+            el.className = "profit-down";
+        } else {
+            el.innerText = "0 元";
+            el.className = "profit-none";
+        }
     }
 </script>
 
